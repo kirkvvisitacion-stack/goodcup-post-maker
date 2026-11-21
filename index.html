@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data: blob:; img-src 'self' data: blob:; connect-src 'self' data: blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Good Cup Post Maker</title>
+<link rel="icon" href="assets/mark-52.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--black:#000;--dark:#1B1B1B;--white:#fff;--crema:#EDE9E4;--cashew:#D1C8C1;--muted:#5f5852;--bdeep:#A9641F;--line:#e6e1dc;--soft:#f6f4f1;--ok:#2f6b3a;--warn:#8a5a12;--bad:#9b2c2c;
+--sans:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--r:12px}
+*{box-sizing:border-box}html,body{margin:0}body{background:var(--white);color:var(--dark);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}
+header{max-width:1240px;margin:0 auto;padding:22px 16px 6px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+header img{height:30px;width:auto}header h1{font-size:24px;margin:0;font-weight:700;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);font-size:14px;flex-basis:100%}
+.app{max-width:1240px;margin:0 auto;padding:8px 16px 40px;display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:28px;align-items:start}
+@media (max-width:900px){.app{grid-template-columns:1fr}.view{position:sticky!important;top:0;z-index:5;background:var(--white);padding-top:6px;box-shadow:0 6px 10px -8px rgba(0,0,0,.25)}.strip{padding-top:6px}input[type=text],input[type=number],select,textarea,#rich{font-size:16px!important}}
+.view{position:sticky;top:12px}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.seg{display:inline-flex;background:var(--soft);border:0;border-radius:10px;padding:3px}
+.seg button{appearance:none;border:0;background:transparent;font:500 14px var(--sans);color:var(--dark);padding:7px 12px;border-radius:8px;cursor:pointer;min-height:34px}
+.seg button[aria-pressed=true]{background:var(--white);box-shadow:0 1px 2px rgba(0,0,0,.14);font-weight:700}
+.nav{display:inline-flex;align-items:center;gap:6px;margin-left:auto;white-space:nowrap}
+.ib{appearance:none;border:0;background:var(--soft);color:var(--dark);border-radius:8px;min-width:36px;height:36px;font:600 14px var(--sans);cursor:pointer;padding:0 10px}
+.ib:disabled{opacity:.35;cursor:default}
+.stagewrap{background:var(--soft);border:0;border-radius:var(--r);padding:12px;display:flex;justify-content:center}
+#cv{display:block;width:100%;height:auto;max-height:calc(100vh - 170px);object-fit:contain;touch-action:none;cursor:grab;border-radius:4px;background:#1B1B1B}
+@media (max-width:900px){#cv{max-height:38vh}.stagewrap{padding:6px}}
+.vstat{font-size:13px;color:var(--muted);margin-top:8px;min-height:20px}
+.strip{display:flex;gap:8px;overflow-x:auto;padding:10px 2px 4px}
+.strip button{flex:0 0 auto;appearance:none;border:2px solid transparent;border-radius:8px;padding:0;background:var(--soft);cursor:pointer;width:64px;height:80px;overflow:hidden;position:relative}
+.strip button[aria-pressed=true]{border-color:var(--dark)}
+.strip img{width:100%;height:100%;object-fit:cover;display:block}
+.strip span{position:absolute;left:4px;top:3px;font:700 12px var(--sans);color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7)}
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{border:0;border-top:1px solid var(--line);padding:18px 0 6px;display:grid;grid-template-columns:30px 1fr;gap:12px;background:var(--white)}
+.num{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--bdeep);color:var(--bdeep);display:grid;place-items:center;font-weight:700;font-size:14px}
+.step.done .num{background:var(--bdeep);color:var(--white)}
+.step h2{font-size:17px;margin:2px 0 8px;font-weight:700}
+.hint{color:var(--muted);font-size:13.5px;margin:6px 0 0}
+.btn{appearance:none;border:0;border-radius:10px;background:var(--dark);color:#fff;font:700 15px var(--sans);padding:12px 18px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn.ghost{background:var(--white);color:var(--dark);border:1px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.ctl{display:grid;grid-template-columns:96px 1fr 64px;gap:8px;align-items:center;margin-top:8px;font-size:13.5px;color:var(--muted)}
+.ctl input[type=range]{width:100%}
+input[type=number],select,input[type=text]{font:14px var(--sans);padding:7px 8px;border:1px solid var(--line);border-radius:8px;width:100%;color:var(--dark);background:#fff}
+.lbl{font-size:13.5px;color:var(--muted);margin:12px 0 4px}
+#rich{min-height:84px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;font:400 16px/1.45 var(--sans);outline:none;white-space:pre-wrap}
+#rich:focus{border-color:var(--dark)}#rich.off{background:var(--soft);color:var(--muted)}#rich.off:empty::before{content:"Add a photo in step 2 first, then type the words here."}#rich .f-io,#rich font[face*=Iowan]{font-family:"GC Iowan",Georgia,serif}
+.sw{width:30px;height:30px;border-radius:50%;border:1px solid var(--cashew);cursor:pointer;padding:0}
+.sw[aria-pressed=true]{outline:2px solid var(--dark);outline-offset:2px}
+.note{border-radius:10px;padding:10px 12px;font-size:13.5px;margin-top:10px;background:var(--soft)}
+.note.ok{background:#eef5ef;color:var(--ok)}.note.warn{background:#fbf3e6;color:var(--warn)}.note.bad{background:#fbeeee;color:var(--bad)}
+.path{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--soft);padding:10px 12px;border-radius:8px;word-break:break-word;margin-top:8px}
+textarea{width:100%;min-height:96px;font:14px/1.5 var(--sans);border:1px solid var(--line);border-radius:8px;padding:10px;color:var(--dark);resize:vertical}
+.confirm{display:flex;gap:10px;align-items:flex-start;margin:12px 0 4px;font-size:14.5px}
+.drop{border:1.5px dashed var(--cashew);border-radius:10px;padding:14px;text-align:center;color:var(--muted);font-size:14px;margin-top:10px}
+.drop.on{border-color:var(--dark);background:var(--soft)}
+details summary{cursor:pointer;font-size:13.5px;color:var(--muted);margin-top:10px}
+footer{max-width:1240px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:12.5px}
+.sr{position:absolute;left:-9999px}
+@media (max-width:900px){.view{top:0!important;margin:0 -16px;padding:6px 16px 4px!important}#cv{max-height:32vh}.view .bar{margin-bottom:4px}.strip button{width:44px;height:55px}.strip{padding:4px 2px 2px}.vstat{margin-top:4px;min-height:0}}
+</style>
+</head>
+<body>
+<header>
+  <a href="https://kirkvvisitacion-stack.github.io/studio/"><img src="assets/gc-lockup.png" alt="Good Cup Studio home"></a>
+  <h1>Post maker</h1>
+  <p>Put words on your photos the Good Cup way, for an Instagram carousel and Story. Everything stays in your browser. First time? <a href="guide.html">Read the 5-step guide</a>.</p>
+</header>
+
+<div class="app">
+  <section class="view" aria-label="Preview">
+    <div class="bar">
+      <div class="seg" id="fmt" role="group" aria-label="Format"><button data-v="c" aria-pressed="true">Carousel</button><button data-v="s" aria-pressed="false">Story</button></div>
+      <button class="ib" id="undo" title="Undo (Cmd+Z)" aria-label="Undo">&#8630;</button>
+      <button class="ib" id="redo" title="Redo (Shift+Cmd+Z)" aria-label="Redo">&#8631;</button>
+      <span class="nav"><button class="ib" id="prev" aria-label="Previous slide">&#8249;</button>
+      <span id="slno" style="font-size:14px;min-width:56px;text-align:center">-</span>
+      <button class="ib" id="next" aria-label="Next slide">&#8250;</button></span>
+    </div>
+    <div class="stagewrap"><canvas id="cv" width="1080" height="1350" aria-label="Slide preview"></canvas></div>
+    <div class="vstat" id="vstat">Opening...</div>
+    <div class="note" id="notice" hidden aria-live="polite"></div>
+    <div class="strip" id="strip" aria-label="Slides"></div>
+  </section>
+
+  <div class="steps">
+    <section class="step" id="s1">
+      <div class="num">1</div>
+      <div>
+        <h2>Load the Good Cup fonts</h2>
+        <div id="fontstate" class="note">Checking this browser for the fonts...</div>
+        <div id="fontnote" class="hint" aria-live="polite"></div>
+        <div id="fontload">
+          <p class="hint">One time per browser. On GoodNAS, open the folder below, select all 16 font files and download them. GoodNAS may give you one zip: that works too, no need to unzip it.</p>
+          <div class="path">03_Brand_&amp;_Marketing / 01_Logos &amp; Assets / Good Cup's Font - Good Sans</div>
+          <div class="row"><a class="btn ghost" href="https://goodcup.aar6.ug.link" target="_blank" rel="noopener">Open GoodNAS</a>
+            <label class="btn"><input type="file" id="fontfiles" class="sr" multiple accept=".otf,.ttf,.woff,.woff2,.zip">Choose font files</label></div>
+          <div class="drop" id="fontdrop">Or drop the 16 font files (or the zip) here</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="step" id="s2">
+      <div class="num">2</div>
+      <div>
+        <h2>Add your photos</h2>
+        <p class="hint">One photo per slide, in posting order. JPG, PNG or HEIC (HEIC opens in Safari). Drag the photo on the preview to move it.</p>
+        <div class="row"><label class="btn"><input type="file" id="photos" class="sr" multiple accept="image/*">Add photos</label>
+          <button class="btn ghost" id="newpost">Start a new post</button></div>
+        <div class="drop" id="photodrop">Or drop photos here</div>
+        <div id="photonote" class="hint" aria-live="polite"></div>
+        <div id="slidectl" hidden>
+          <div class="ctl"><span>Zoom</span><input type="range" id="r_zoom" min="1" max="3" step="0.01"><input type="number" id="n_zoom" min="1" max="3" step="0.01"></div>
+          <div class="row"><button class="ib" id="mvl">Move slide left</button><button class="ib" id="mvr">Move slide right</button><button class="ib" id="swap">Change photo</button><button class="ib" id="del">Remove slide</button></div>
+          <input type="file" id="swapfile" class="sr" accept="image/*">
+        </div>
+      </div>
+    </section>
+
+    <section class="step" id="s3">
+      <div class="num">3</div>
+      <div>
+        <h2>Write the words</h2>
+        <p class="hint">Press Return for a new line. Select some words to make only those bold, italic, Iowan or a colour. Drag the words on the preview to move them; arrow keys nudge 1 px, Shift + arrow 10 px.</p>
+        <div class="row" role="toolbar" aria-label="Selected words">
+          <button class="ib" id="t_b" title="Bold selected words (Cmd or Ctrl + B)"><b>B</b></button>
+          <button class="ib" id="t_i" title="Italic selected words (Cmd or Ctrl + I)"><i>I</i></button>
+          <button class="ib" id="t_gs" title="Selected words in Good Sans">Good Sans</button>
+          <button class="ib" id="t_io" title="Selected words in Iowan" style="font-family:'GC Iowan',Georgia,serif">Iowan</button>
+          <button class="ib" id="t_clear" title="Plain words">Plain</button>
+        </div>
+        <div class="row" id="selcolors" aria-label="Colour of selected words"></div>
+        <div id="rich" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Words on this slide" spellcheck="true"></div>
+        <div class="lbl">Whole slide</div>
+        <p class="hint">Carousel and Story keep their own word and photo positions: check both with the switch above the preview.</p>
+        <div class="seg" id="i_font" role="group" aria-label="Font"><button data-v="gs">Good Sans</button><button data-v="io">Iowan</button></div>
+        <div class="ctl"><span>Normal weight</span><select id="i_weight"></select><span></span></div>
+        <div class="ctl"><span>Bold weight</span><select id="i_bw"></select><span></span></div>
+        <div class="ctl"><span>Size</span><input type="range" id="r_size" min="16" max="160" step="1"><input type="number" id="n_size" min="8" max="400"></div>
+        <div class="ctl"><span>Line spacing</span><input type="range" id="r_lh" min="0.8" max="2.2" step="0.02"><input type="number" id="n_lh" step="0.02"></div>
+        <div class="ctl"><span>Letter spacing</span><input type="range" id="r_ls" min="-5" max="20" step="0.5"><input type="number" id="n_ls" step="0.5"></div>
+        <div class="ctl"><span>Dark shade behind words</span><input type="range" id="r_shade" min="0" max="0.9" step="0.01"><input type="number" id="n_shade" min="0" max="0.9" step="0.01"></div>
+        <div class="row">
+          <div class="seg" id="i_it" role="group" aria-label="Italic"><button data-v="0">Upright</button><button data-v="1">Italic</button></div>
+          <div class="seg" id="i_align" role="group" aria-label="Align"><button data-v="left">Left</button><button data-v="center">Centre</button><button data-v="right">Right</button></div>
+        </div>
+        <div class="row" id="colors" aria-label="Colour of all words"></div>
+        <div class="row">
+          <label style="display:flex;gap:6px;align-items:center;font-size:14px"><input type="checkbox" id="i_mark"> Cup mark at the bottom</label>
+        </div>
+        <div class="row">
+          <button class="ib" id="centre">Centre the words</button>
+          <button class="ib" id="copyall">Use this look on every slide</button>
+          <button class="ib" id="tostory">Story: copy the carousel layout</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="step" id="s4">
+      <div class="num">4</div>
+      <div>
+        <h2>Download</h2>
+        <div class="lbl">Post name (needed, used for the folder)</div>
+        <input type="text" id="pname" placeholder="261121 Closed Mon-Wed Post">
+        <div class="lbl">Caption (optional, saved as 00 Caption.txt)</div>
+        <textarea id="caption" placeholder="Paste the caption here"></textarea>
+        <label class="confirm"><input type="checkbox" id="ok"><span>I read every word on every slide, in both Carousel and Story, and the dates and days match.</span></label>
+        <div class="row"><button class="btn" id="dl" disabled>Download the post (.zip)</button></div>
+        <div id="dlstate" class="hint" aria-live="polite"></div>
+        <details><summary>Save or open a project (to finish later or hand to someone)</summary>
+          <div class="row"><button class="ib" id="saveproj">Save project file</button><label class="ib" style="display:inline-flex;align-items:center"><input type="file" id="openproj" class="sr" accept=".gcpost,.zip,.json">Open project file</label></div>
+          <p class="hint">A project file keeps the photos, words and positions. Keep it beside the post on the NAS.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="step" id="s5">
+      <div class="num">5</div>
+      <div>
+        <h2>Save it to the NAS</h2>
+        <ol style="margin:4px 0 0;padding-left:20px;font-size:14px">
+          <li>Unzip the download. You get one folder named after the post.</li>
+          <li>On GoodNAS, upload that folder into:</li>
+        </ol>
+        <div class="path">01_Final_Outputs / Photos / 00 Post Maker - Inbox</div>
+        <p class="hint">On a phone: the zip lands in Files (iPhone) or Downloads (Android). Unzipping is easier on a computer, so upload from a laptop when you can.</p>
+        <p class="hint">Upload only into that folder. Never move, rename or delete anything else on the NAS.</p>
+        <div class="row"><a class="btn ghost" href="https://goodcup.aar6.ug.link" target="_blank" rel="noopener">Open GoodNAS</a>
+          <a class="btn ghost" href="https://kirkvvisitacion-stack.github.io/goodcup-nas-guide/" target="_blank" rel="noopener">First time? NAS guide</a></div>
+        <div class="lbl">Message for the team</div>
+        <textarea id="msg" readonly></textarea>
+        <div class="row"><button class="ib" id="copymsg">Copy message</button></div>
+      </div>
+    </section>
+  </div>
+</div>
+<footer>Good Cup Studio. Your photos and fonts never leave this browser; only the files you download do.</footer>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
