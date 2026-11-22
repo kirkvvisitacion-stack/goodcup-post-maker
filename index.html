@@ -62,6 +62,7 @@ textarea{width:100%;min-height:96px;font:14px/1.5 var(--sans);border:1px solid v
 .drop{border:1.5px dashed var(--cashew);border-radius:10px;padding:14px;text-align:center;color:var(--muted);font-size:14px;margin-top:10px}
 .drop.on{border-color:var(--dark);background:var(--soft)}
 details summary{cursor:pointer;font-size:13.5px;color:var(--muted);margin-top:10px}
+details.how{margin:12px 0 0;max-width:640px;border:1px solid var(--line);border-radius:12px;padding:2px 14px;background:var(--white)}details.how summary{margin:0;padding:12px 0;font-size:15px;font-weight:700;color:var(--dark)}details.how summary span{font-weight:400;color:var(--muted)}details.how ol{margin:0 0 8px;padding-left:20px;display:grid;gap:8px;font-size:14.5px}details.how .more{display:inline-block;margin:2px 0 12px;font-weight:700;color:var(--dark)}
 footer{max-width:1240px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:12.5px}
 .sr{position:absolute;left:-9999px}
 @media (max-width:900px){.view{top:0!important;margin:0 -16px;padding:6px 16px 4px!important}#cv{max-height:32vh}.view .bar{margin-bottom:4px}.strip button{width:44px;height:55px}.strip{padding:4px 2px 2px}.vstat{margin-top:4px;min-height:0}}
@@ -71,7 +72,18 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 30px;color:var(--muted);fon
 <header>
   <a href="https://kirkvvisitacion-stack.github.io/studio/"><img src="assets/gc-lockup.png" alt="Good Cup Marketing Tools home"></a>
   <h1>Create a post</h1>
-  <p>Put words on your photos the Good Cup way, for an Instagram carousel and Story. Everything stays in your browser. First time? <a href="guide.html">Read the 5-step guide</a>.</p>
+  <p>Put words on your photos the Good Cup way, for an Instagram carousel and Story. Everything stays in your browser.</p>
+  <details class="how">
+    <summary>How to use it <span>(5 quick steps)</span></summary>
+    <ol>
+      <li><b>Load the fonts, once.</b> Download the 16 Good Sans files from the NAS, then press Choose font files.</li>
+      <li><b>Add your photos.</b> One photo per slide, in posting order. Drag a photo to choose what shows.</li>
+      <li><b>Write the words.</b> Type in the words box and drag the words to move them. Keep them off busy parts of the photo.</li>
+      <li><b>Read every slide.</b> Check Carousel and Story, name the post, paste the caption, then press Download the post.</li>
+      <li><b>Save it to the NAS.</b> Upload the unzipped folder to the inbox, then copy the team message into the team chat.</li>
+    </ol>
+    <a class="more" href="guide.html">Open the full guide</a>
+  </details>
 </header>
 
 <div class="app">
