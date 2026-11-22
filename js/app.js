@@ -1,12 +1,15 @@
 // Good Cup Post Maker: page logic. Drawing lives in render.js (one routine for preview and export).
 import { FMT, INK, defaultStyle, drawSlide, layoutText, photoRect, parseRich, facesNeeded } from "./render.js";
 import { zip, unzip } from "./zip.js";
+import { lintCaption } from "./lint.js";
+import { rowsOf, check as calmCheck, suggest as calmSuggest, bands as calmBands } from "./calm.js";
 import { addFontFiles, restoreFonts, status as fontStatus, has as hasFont, GS_WEIGHTS, IO_WEIGHTS, idb } from "./fonts.js";
 
 const $ = id => document.getElementById(id);
 const cv = $("cv"), ctx = cv.getContext("2d");
 const COLORS = [["#FAF8F3", "Cream"], ["#FFFFFF", "White"], ["#1B1B1B", "Good Cup dark"], ["#000000", "Black"], ["#EDE9E4", "Crema"], ["#D1C8C1", "Cashew"]];
-const STORY_SHIFT = 320; // Story words sit 320 px lower than on the carousel (clear of the reply bar)
+const STORY_SHIFT = 155; // Story default sits 155 px lower than the carousel one: top 1280, above the link-sticker zone (1480-1620)
+const CAR_Y = 1125;      // default top of the words on a new carousel slide
 const MAX_SIDE = 3240;   // working copy of each photo (3x the slide width, enough for zoom)
 
 let P = newProject(), fmt = "c", cur = 0;
@@ -14,12 +17,14 @@ const IMG = new Map(); // key -> {bmp, blob, url}
 let mark = null, hist = [], hi = -1, commitT = null, saveT = null, drag = null, raf = 0, exporting = false;
 
 function newProject() { return { v: 1, name: "", caption: "", slides: [] }; }
+// A new slide takes the type style, shade and mark of the one before it, never its position: every photo
+// has its own calm spot, so the words start at the default y.
 function newSlide(from) {
   const b = from ? JSON.parse(JSON.stringify(from)) : null;
   return {
     id: Math.random().toString(36).slice(2, 9), photo: null, html: "",
     style: b ? b.style : defaultStyle(),
-    pos: b ? b.pos : { c: { x: 540, y: 1125 }, s: { x: 540, y: 1125 + STORY_SHIFT } },
+    pos: { c: { x: 540, y: CAR_Y }, s: { x: 540, y: CAR_Y + STORY_SHIFT } },
     crop: { c: { zoom: 1, ox: 0, oy: 0 }, s: { zoom: 1, ox: 0, oy: 0 } },
     shade: b ? b.shade : 0.62, mark: b ? b.mark : true,
   };
@@ -172,19 +177,88 @@ function drawNow() {
   const F = FMT[fmt];
   if (cv.height !== F.h) { cv.height = F.h; fitCanvas(); }
   const sl = S();
-  if (!sl) { ctx.fillStyle = "#EDE9E4"; ctx.fillRect(0, 0, F.w, F.h); ctx.fillStyle = "#5f5852"; ctx.font = "500 40px DM Sans, system-ui"; ctx.textAlign = "center"; ctx.fillText("Add photos in step 2", F.w / 2, F.h / 2); ctx.textAlign = "left"; return; }
+  if (!sl) { ctx.fillStyle = "#EDE9E4"; ctx.fillRect(0, 0, F.w, F.h); ctx.fillStyle = "#5f5852"; ctx.font = "500 40px DM Sans, system-ui"; ctx.textAlign = "center"; ctx.fillText("Add photos in step 2", F.w / 2, F.h / 2); ctx.textAlign = "left"; $("placenote").hidden = true; return; }
   const img = IMG.get(sl.photo);
   const box = drawSlide(ctx, sl, fmt, { photo: img && img.bmp, mark });
+  const issues = frameIssues(box, fmt);
   if (!exporting) {
-    ctx.save(); ctx.setLineDash([10, 8]); ctx.lineWidth = 2; ctx.strokeStyle = "rgba(255,255,255,.75)";
+    ctx.save();
+    if (drag && drag.kind === "text") { // safe frame while the words are being dragged
+      const Z = FRAME[fmt]; ctx.setLineDash([14, 10]); ctx.lineWidth = 2; ctx.strokeStyle = "rgba(224,163,92,.9)";
+      ctx.strokeRect(SIDE, Z.top, F.w - 2 * SIDE, Z.bot - Z.top);
+      if (fmt === "s") { ctx.fillStyle = "rgba(224,163,92,.16)"; ctx.fillRect(SIDE, STICKER[0], F.w - 2 * SIDE, STICKER[1] - STICKER[0]); ctx.setLineDash([]); ctx.font = "500 26px DM Sans, system-ui"; ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.fillText("link sticker zone", SIDE + 14, STICKER[0] + 34); }
+    }
+    ctx.setLineDash([10, 8]); ctx.lineWidth = 2; ctx.strokeStyle = issues.length ? "rgba(255,120,80,.95)" : "rgba(255,255,255,.75)";
     if (box.w > 0) ctx.strokeRect(box.x - 12, box.y - 8, box.w + 24, box.h + 16);
     if (drag && drag.kind === "text" && Math.abs(sl.pos[fmt].x - 540) < 0.5) { ctx.strokeStyle = "rgba(255,80,80,.9)"; ctx.beginPath(); ctx.moveTo(540, 0); ctx.lineTo(540, F.h); ctx.stroke(); }
     ctx.restore();
   }
   const p = sl.pos[fmt], off = Math.round(p.x - 540), miss = missingFonts(sl);
-  $("vstat").textContent = `${FMT[fmt].name} ${F.w}x${F.h} | ${off === 0 ? "words centred" : "words off centre"} | ${miss.length ? "missing font: " + miss[0] : "fonts ok"}`;
-  $("vstat").style.color = miss.length ? "var(--bad)" : "";
+  const pl = placement(sl, fmt, box);
+  $("vstat").textContent = `${FMT[fmt].name} ${F.w}x${F.h} | ${off === 0 ? "words centred" : "words off centre"} | ${miss.length ? "missing font: " + miss[0] : "fonts ok"}${pl.short ? " | " + pl.short : ""}${issues.length ? " | outside the safe frame" : ""}`;
+  $("vstat").style.color = miss.length ? "var(--bad)" : (pl.busy || issues.length) ? "var(--warn)" : "";
+  placeNote(pl, issues);
 }
+
+// ---------- where the words sit: safe frame and calm spot ----------
+// Safe frame (gc-post-editor, rule 66): 100 px from the sides; carousel 100 to 1250, Story 250 to 1720;
+// on a Story keep 1480 to 1620 clear for a link sticker.
+const SIDE = 100, FRAME = { c: { top: 100, bot: 1250 }, s: { top: 250, bot: 1720 } }, STICKER = [1480, 1620];
+function frameIssues(box, f) {
+  const out = [];
+  if (!(box.w > 0)) return out;
+  const Z = FRAME[f], W = FMT[f].w;
+  if (box.x < SIDE - 0.5 || box.x + box.w > W - SIDE + 0.5) out.push("past the 100 px side margin");
+  if (box.y < Z.top - 0.5) out.push(`above y ${Z.top}`);
+  if (box.y + box.h > Z.bot + 0.5) out.push(`below y ${Z.bot}`);
+  if (f === "s" && box.y < STICKER[1] && box.y + box.h > STICKER[0]) out.push("over the link-sticker zone (1480 to 1620)");
+  return out;
+}
+// Calm check runs on the photo as framed (no shade, no mark), cached per photo and crop, computed a moment after
+// a change so dragging stays smooth.
+const CALM = new Map(); let calmT = 0;
+function calmKey(sl, f) { const c = sl.crop[f]; return `${sl.photo}|${f}|${c.zoom}|${c.ox}|${c.oy}`; }
+function calmRows(sl, f, now) {
+  const img = IMG.get(sl.photo); if (!img) return null;
+  const key = calmKey(sl, f), hit = CALM.get(key); if (hit) return hit;
+  if (!now) { clearTimeout(calmT); calmT = setTimeout(() => { const cs = S(); if (cs) calmRows(cs, fmt, true); draw(); }, 160); return null; }
+  const F = FMT[f], c = document.createElement("canvas"); c.width = F.w; c.height = F.h;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.fillStyle = "#1B1B1B"; x.fillRect(0, 0, F.w, F.h);
+  const r = photoRect(img.bmp, f, sl.crop[f]); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(img.bmp, r.x, r.y, r.w, r.h);
+  const rows = rowsOf(x.getImageData(0, 0, F.w, F.h).data, F.w, F.h); rows.b = calmBands(rows); c.width = c.height = 0;
+  if (CALM.size > 16) CALM.delete(CALM.keys().next().value);
+  CALM.set(key, rows); return rows;
+}
+const hasWords = sl => parseRich(sl.html).some(l => l.some(r => r.t.trim()));
+function placement(sl, f, box) {
+  if (!hasWords(sl) || !(box.w > 0) || !IMG.get(sl.photo)) return { short: "", busy: false, text: "" };
+  if (drag && drag.kind === "photo") return { short: "", busy: false, text: "" };
+  const rows = calmRows(sl, f); if (!rows) return { short: "checking the photo", busy: false, text: "" };
+  const res = calmCheck(rows, box.y + box.h / 2, rows.b);
+  return res.ok ? { short: "calm spot", busy: false, ok: true } : { short: "busy photo behind the words", busy: true };
+}
+function placeNote(pl, issues) {
+  const n = $("placenote"), sl = S(); let t = "", k = "";
+  if (sl && pl.ok) { t = "Calm spot: the photo behind these words is plain, so they read well."; k = "ok"; }
+  if (pl.busy) { t = "Busy photo behind the words (a table edge, glass, a sign or a face). Press Move to calm spot, or drag them to a plainer band close to the subject."; k = "warn"; }
+  if (issues.length) { t = (t && pl.busy ? t + " " : "") + "The words cross the safe frame: " + issues.join(", ") + ". Slides keep 100 px at the sides; a carousel keeps y 100 to 1250, a Story y 250 to 1720."; k = "warn"; }
+  n.hidden = !t; n.textContent = t; n.className = "note " + k;
+}
+const calmIdx = new Map();
+function calmGo() {
+  const sl = S(); if (!sl) return;
+  if (!IMG.get(sl.photo)) return status("Add a photo first.", "warn", "placeinfo");
+  const rows = calmRows(sl, fmt, true), L = layoutText(ctx, sl, fmt).box, st = sl.style;
+  const h = L.h || st.size * st.lh, Z = FRAME[fmt];
+  const fits = yc => { const top = yc - h / 2, bot = yc + h / 2; return top >= Z.top && bot <= Z.bot && !(fmt === "s" && top < STICKER[1] && bot > STICKER[0]); };
+  const sg = calmSuggest(rows, 6, fits);
+  if (!sg.out.length) return status("No calm band fits inside the safe frame on this photo. Pan or zoom the photo, or place the words by eye.", "warn", "placeinfo");
+  const key = sl.id + "|" + fmt, i = (calmIdx.get(key) || 0) % sg.out.length; calmIdx.set(key, i + 1);
+  sl.pos[fmt].y = Math.round(sg.out[i].y - h / 2);
+  status(`Moved to a calm spot near the subject (${i + 1} of ${sg.out.length}). Press again for the next one, or drag to fine-tune.`, "ok", "placeinfo");
+  draw(); commit();
+}
+$("calmgo").onclick = calmGo;
 const WNAME = Object.fromEntries(GS_WEIGHTS.map(([w, n]) => [w, n]));
 function missingFonts(sl) { return facesNeeded(sl).filter(x => !hasFont(x.f, x.w, x.it)).map(x => `${x.f === "io" ? "Iowan" : "Good Sans"} ${WNAME[x.w] || x.w}${x.it ? " Italic" : ""}`); }
 
@@ -259,8 +333,10 @@ $("i_weight").onchange = e => change(sl => sl.style.weight = +e.target.value);
 $("i_bw").onchange = e => change(sl => sl.style.bw = +e.target.value);
 $("i_mark").onchange = e => change(sl => sl.mark = e.target.checked);
 $("centre").onclick = () => change(sl => sl.pos[fmt].x = 540);
-$("copyall").onclick = () => { const s0 = S(); if (!s0) return; for (const sl of P.slides) if (sl !== s0) { sl.style = { ...s0.style }; sl.pos = JSON.parse(JSON.stringify(s0.pos)); sl.shade = s0.shade; sl.mark = s0.mark; } status("Every slide now has this slide's font, size, colour and position.", "ok"); draw(); commit(); };
-$("tostory").onclick = () => { for (const sl of P.slides) { sl.pos.s = { x: sl.pos.c.x, y: sl.pos.c.y + STORY_SHIFT }; sl.crop.s.zoom = sl.crop.c.zoom; } setFmt("s"); status("Story slides now follow the carousel layout. Check each one, a taller frame shows more photo.", "ok"); commit(); };
+$("copyall").onclick = () => { const s0 = S(); if (!s0) return; for (const sl of P.slides) if (sl !== s0) { sl.style = { ...s0.style }; sl.shade = s0.shade; sl.mark = s0.mark; } status("Every slide now has this slide's type style, shade and cup mark. Each slide keeps its own word position.", "ok"); draw(); commit(); };
+$("tostory").onclick = () => { for (const sl of P.slides) { sl.pos.s = { x: sl.pos.c.x, y: sl.pos.c.y + STORY_SHIFT }; sl.crop.s.zoom = sl.crop.c.zoom;
+  const L = layoutText(ctx, sl, "s").box; if (L.h && L.y < STICKER[1] && L.y + L.h > STICKER[0]) sl.pos.s.y = STICKER[0] - L.h - 10; } // never on the link-sticker zone
+   setFmt("s"); status("Story slides now follow the carousel layout. Check each one, a taller frame shows more photo.", "ok"); commit(); };
 function swatches(el, onPick, title) {
   el.innerHTML = COLORS.map(([c, n]) => `<button class="sw" data-c="${c}" title="${title} ${n}" aria-label="${title} ${n}" style="background:${c}"></button>`).join("") +
     `<input type="color" title="${title} other colour" aria-label="${title} other colour" style="width:36px;height:32px;border:0;background:none;padding:0">`;
@@ -294,7 +370,7 @@ $("strip").addEventListener("click", e => { const b = e.target.closest("button")
 $("prev").onclick = () => { if (cur > 0) { cur--; ui(); } }; $("next").onclick = () => { if (cur < P.slides.length - 1) { cur++; ui(); } };
 function setFmt(f) { fmt = f; setSeg("fmt", f); fitCanvas(); ui(); }
 seg("fmt", setFmt);
-function ui() { strip(); panel(); draw(); gate(); msg(); $("s2").classList.toggle("done", P.slides.length > 0); $("s3").classList.toggle("done", P.slides.some(s => s.html)); }
+function ui() { strip(); panel(); draw(); lint(); gate(); msg(); $("s2").classList.toggle("done", P.slides.length > 0); $("s3").classList.toggle("done", P.slides.some(s => s.html)); }
 window.addEventListener("resize", () => { fitCanvas(); draw(); });
 
 // ---------- download ----------
@@ -309,13 +385,25 @@ function problems() {
   const miss = new Set(); for (const s of P.slides) for (const m of missingFonts(s)) miss.add(m);
   if (miss.size) out.push("load the fonts in step 1 (" + [...miss].slice(0, 3).join(", ") + ")");
   if (P.slides.length && !P.slides.some(s => parseRich(s.html).some(l => l.some(r => r.t.trim())))) out.push("write the words in step 3");
+  if (capHits.length && !$("capok").checked) out.push("read the caption notes in step 4 and tick I checked");
   if (!$("ok").checked) out.push("tick the box after reading every word");
   return out;
 }
 function gate() { const p = problems(); $("dl").disabled = p.length > 0; $("dlstate").textContent = p.length ? "Before you can download: " + p.join("; ") + "." : "Ready."; }
 $("ok").onchange = gate;
 $("pname").oninput = e => { P.name = e.target.value; msg(); gate(); save(); };
-$("caption").oninput = e => { P.caption = e.target.value; msg(); save(); };
+$("caption").oninput = e => { P.caption = e.target.value; msg(); save(); lint(); gate(); };
+// Caption lint (rule 63): soft hits the writer reads and ticks. Nothing is changed in the caption.
+let capHits = [], capKey = "";
+function lint() {
+  capHits = lintCaption(P.caption || "");
+  const key = capHits.map(h => h.line + h.label + h.text).join("|");
+  if (key !== capKey) { capKey = key; $("capok").checked = false; } // a new hit needs a new look
+  const box = $("caplint"), ul = $("caplist"); box.hidden = !capHits.length;
+  ul.textContent = ""; for (const h of capHits.slice(0, 12)) { const li = document.createElement("li"); li.textContent = `Line ${h.line}: ${h.label}, ${h.text}`; ul.appendChild(li); }
+  if (capHits.length > 12) { const li = document.createElement("li"); li.textContent = `and ${capHits.length - 12} more`; ul.appendChild(li); }
+}
+$("capok").onchange = gate;
 
 async function renderPNG(sl, f) {
   const F = FMT[f], c = document.createElement("canvas"); c.width = F.w; c.height = F.h;
@@ -425,4 +513,4 @@ function status(t, kind, where) {
 })();
 
 // For the test page and for checks from the console.
-window.GCPM = { get P() { return P; }, IMG, FMT, renderPNG, setProject(p) { P = p; cur = 0; ui(); }, addPhotos, takeFonts, problems, setFmt, get fmt() { return fmt; } };
+window.GCPM = { _setDrag(kind) { drag = kind ? { kind, q: { x: 0, y: 0 }, x: 0, y: 0 } : null; draw(); }, get P() { return P; }, IMG, FMT, renderPNG, setProject(p) { P = p; cur = 0; ui(); }, addPhotos, takeFonts, problems, setFmt, get fmt() { return fmt; } };

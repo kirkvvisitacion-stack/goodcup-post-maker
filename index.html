@@ -55,7 +55,7 @@ input[type=number],select,input[type=text]{font:14px var(--sans);padding:7px 8px
 .sw{width:30px;height:30px;border-radius:50%;border:1px solid var(--cashew);cursor:pointer;padding:0}
 .sw[aria-pressed=true]{outline:2px solid var(--dark);outline-offset:2px}
 .note{border-radius:10px;padding:10px 12px;font-size:13.5px;margin-top:10px;background:var(--soft)}
-.note.ok{background:#eef5ef;color:var(--ok)}.note.warn{background:#fbf3e6;color:var(--warn)}.note.bad{background:#fbeeee;color:var(--bad)}
+.note ul{margin:6px 0 0;padding-left:18px}.note.ok{background:#eef5ef;color:var(--ok)}.note.warn{background:#fbf3e6;color:var(--warn)}.note.bad{background:#fbeeee;color:var(--bad)}
 .path{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--soft);padding:10px 12px;border-radius:8px;word-break:break-word;margin-top:8px}
 textarea{width:100%;min-height:96px;font:14px/1.5 var(--sans);border:1px solid var(--line);border-radius:8px;padding:10px;color:var(--dark);resize:vertical}
 .confirm{display:flex;gap:10px;align-items:flex-start;margin:12px 0 4px;font-size:14.5px}
@@ -155,9 +155,12 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 30px;color:var(--muted);fon
         <div class="row">
           <label style="display:flex;gap:6px;align-items:center;font-size:14px"><input type="checkbox" id="i_mark"> Cup mark at the bottom</label>
         </div>
+        <div class="note" id="placenote" hidden aria-live="polite"></div>
+        <div id="placeinfo" class="hint" aria-live="polite"></div>
         <div class="row">
+          <button class="ib" id="calmgo" title="Put the words on the calmest band of this photo, close to the subject, inside the safe frame">Move to calm spot</button>
           <button class="ib" id="centre">Centre the words</button>
-          <button class="ib" id="copyall">Use this look on every slide</button>
+          <button class="ib" id="copyall" title="Copies font, size, colour, shade and cup mark. Never the word position.">Use this look on every slide</button>
           <button class="ib" id="tostory">Story: copy the carousel layout</button>
         </div>
       </div>
@@ -170,10 +173,17 @@ footer{max-width:1240px;margin:0 auto;padding:0 16px 30px;color:var(--muted);fon
         <div class="lbl">Post name (needed, used for the folder)</div>
         <input type="text" id="pname" placeholder="261121 Closed Mon-Wed Post">
         <div class="lbl">Caption (optional, saved as 00 Caption.txt)</div>
+        <p class="hint">Voice: keep the writer's own words, let the guest or the room do the talking, and say what the reader gets.</p>
         <textarea id="caption" placeholder="Paste the caption here"></textarea>
+        <div class="note warn" id="caplint" hidden aria-live="polite">
+          <b>Check these before it posts</b> (hashtags, Comment or Reply lines, link in bio, @tags, No. ids, dashes, curly quotes). Nothing here is changed for you.
+          <ul id="caplist"></ul>
+          <label class="confirm" style="margin:8px 0 0"><input type="checkbox" id="capok"><span>I checked these. They belong in this caption.</span></label>
+        </div>
         <label class="confirm"><input type="checkbox" id="ok"><span>I read every word on every slide, in both Carousel and Story, and the dates and days match.</span></label>
         <div class="row"><button class="btn" id="dl" disabled>Download the post (.zip)</button></div>
         <div id="dlstate" class="hint" aria-live="polite"></div>
+        <p class="hint"><b>Need a hand?</b> Download the .gcpost and send it to Kirk. It keeps your photos, words and positions, so he can pick it up where you stopped.</p>
         <details><summary>Save or open a project (to finish later or hand to someone)</summary>
           <div class="row"><button class="ib" id="saveproj">Save project file</button><label class="ib" style="display:inline-flex;align-items:center"><input type="file" id="openproj" class="sr" accept=".gcpost,.zip,.json">Open project file</label></div>
           <p class="hint">A project file keeps the photos, words and positions. Keep it beside the post on the NAS.</p>
