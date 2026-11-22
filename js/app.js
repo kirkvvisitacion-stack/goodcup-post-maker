@@ -481,7 +481,7 @@ $("openproj").onchange = async e => { const f = e.target.files[0]; e.target.valu
 // ---------- team message ----------
 function msg() {
   const n = postName(), k = P.slides.length, cap = (P.caption || "").trim();
-  $("msg").value = `📣 ${n} is ready\nhttps://goodcup.aar6.ug.link\n${k} slide${k === 1 ? "" : "s"}, carousel and Story${cap ? ", caption inside" : ""}.\n\n01_Final_Outputs / Photos / 00 Post Maker - Inbox / ${n}`;
+  $("msg").value = `📣 ${n} is ready\nhttps://goodcup.aar3.ug.link\n${k} slide${k === 1 ? "" : "s"}, carousel and Story${cap ? ", caption inside" : ""}.\n\n01_Final_Outputs / Photos / 00 Post Maker - Inbox / ${n}`;
 }
 $("copymsg").onclick = async () => { try { await navigator.clipboard.writeText($("msg").value); $("copymsg").textContent = "Copied"; setTimeout(() => $("copymsg").textContent = "Copy message", 1500); } catch (e) { $("msg").select(); } };
 
